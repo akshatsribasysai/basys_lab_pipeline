@@ -1,3 +1,4 @@
+
 #################################import necessary libraries############################################################
 
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -13,10 +14,186 @@ import mysql.connector
 from mysql.connector import Error
 
 # Set up environment variables
-os.environ["VISION_AGENT_API_KEY"] = "NjBhaDZzczJzcm16bXk2N3lwcTg5OjJIMWtXWnNkN2k3RnMyQ1RNbGJuNXJzMFZPN3NlYjd6"
+Landing_api_key=os.getenv("VISION_AGENT_API_KEY", "LandingAI_API_KEY_HERE")
+os.environ["VISION_AGENT_API_KEY"] = Landing_api_key
+
 
 from agentic_doc.parse import parse
+
+#for pydantic model
+from pydantic import BaseModel, Field, ValidationError
+from typing import Optional, List
+from datetime import date
 ###########################################################################################################################
+
+
+
+
+
+
+
+
+# Define Pydantic models for each table in the schema - FIXED MODELS
+class Patient(BaseModel):
+    """Patient table schema"""
+    patient_id: int = Field(..., description="Primary key")
+    medical_record_number: str = Field(..., description="Unique medical record number")
+    created_date: datetime = Field(default_factory=datetime.now)
+    updated_date: Optional[datetime] = None
+
+class Visit(BaseModel):
+    """Visit table schema"""
+    visit_date: str  # Changed to string to handle various date formats
+    visit_type: str
+    department_name: str
+    primary_provider_name: str
+    discharge_date: Optional[str] = None  # Changed to optional string
+
+class VisitNotes(BaseModel):
+    """Visit Notes table schema"""
+    visit_id: Optional[int] = None
+    note_date: Optional[str] = None  # Changed to string
+    note_type: Optional[str] = None
+    full_note_text: Optional[str] = None
+    chief_complaint: Optional[str] = None
+    history_present_illness: Optional[str] = None
+    review_of_systems: Optional[str] = None
+    physical_exam: Optional[str] = None
+    assessment: Optional[str] = None
+    plan: Optional[str] = None
+    author_provider_id: Optional[int] = None
+    extraction_confidence: Optional[float] = Field(None, ge=0.0, le=1.0)
+    extraction_method: Optional[str] = None
+    extraction_timestamp: Optional[str] = None  # Changed to string
+
+class Diagnosis(BaseModel):
+    """Diagnosis table schema - FIXED"""
+    patient_id: Optional[int] = None  # Made optional to prevent validation errors
+    visit_id: Optional[int] = None
+    diagnosis_name: str
+    icd10_code: Optional[str] = None
+    onset_date: Optional[str] = None  # Changed to string
+    resolution_date: Optional[str] = None  # Changed to string
+    is_chronic: Optional[bool] = Field(default=False)
+    is_active: Optional[bool] = Field(default=True)
+    severity: Optional[str] = None
+    diagnosing_provider_id: Optional[int] = None
+    diagnosis_source: Optional[str] = None
+    diagnosis_context: Optional[str] = None
+    confidence_score: Optional[float] = Field(None, ge=0.0, le=1.0)
+    updated_date: Optional[str] = None  # Changed to string
+
+class Symptom(BaseModel):
+    """Symptom table schema - FIXED"""
+    patient_id: Optional[int] = None  # Made optional
+    visit_id: Optional[int] = None
+    symptom_name: str
+    onset_date: Optional[str] = None  # Changed to string
+    duration: Optional[str] = None
+    frequency: Optional[str] = None
+    severity: Optional[str] = None
+    symptom_description: Optional[str] = None
+    alleviating_factors: Optional[str] = None
+    aggravating_factors: Optional[str] = None
+    reported_date: Optional[str] = None  # Changed to string
+    resolution_date: Optional[str] = None  # Changed to string
+
+class Medication(BaseModel):
+    """Medication table schema - FIXED"""
+    patient_id: Optional[int] = None  # Made optional
+    visit_id: Optional[int] = None
+    medication_name: str
+    generic_name: Optional[str] = None
+    rxnorm_code: Optional[str] = None
+    dose: Optional[str] = None
+    dose_unit: Optional[str] = None
+    frequency: Optional[str] = None
+    route: Optional[str] = None
+    start_date: Optional[str] = None  # Changed to string
+    end_date: Optional[str] = None  # Changed to string
+    discontinuation_reason: Optional[str] = None
+    is_active: Optional[bool] = Field(default=True)
+    is_prn: Optional[bool] = Field(default=False)
+    prescribing_provider_id: Optional[int] = None
+    sig_text: Optional[str] = None
+    patient_instructions: Optional[str] = None
+    updated_date: Optional[str] = None  # Changed to string
+
+class VitalSigns(BaseModel):
+    """Vital signs table schema - FIXED"""
+    patient_id: Optional[int] = None  # Made optional
+    visit_id: Optional[int] = None
+    measurement_datetime: str  # Changed to string
+    weight_kg: Optional[float] = Field(None, ge=0)
+    height_cm: Optional[float] = Field(None, ge=0)
+    bmi: Optional[float] = Field(None, ge=0)
+    pulse_bpm: Optional[int] = Field(None, ge=0)
+    blood_pressure_systolic: Optional[int] = Field(None, ge=0)
+    blood_pressure_diastolic: Optional[int] = Field(None, ge=0)
+    temperature_celsius: Optional[float] = Field(None, ge=0)
+    respiratory_rate: Optional[int] = Field(None, ge=0)
+    oxygen_saturation_percent: Optional[int] = Field(None, ge=0, le=100)
+    pain_scale: Optional[int] = Field(None, ge=0, le=10)
+    additional_vitals: Optional[str] = None
+    measurement_context: Optional[str] = None
+    measured_by_id: Optional[int] = None
+
+class LabResult(BaseModel):
+    """Lab result table schema - FIXED"""
+    patient_id: Optional[int] = None  # Made optional
+    visit_id: Optional[int] = None
+    lab_name: str
+    test_name: str
+    loinc_code: Optional[str] = None
+    result_value: str
+    result_numeric: Optional[float] = None
+    unit_of_measurement: Optional[str] = None
+    reference_range_low: Optional[float] = None
+    reference_range_high: Optional[float] = None
+    reference_range_text: Optional[str] = None
+    abnormality_flag: Optional[bool] = Field(default=False)
+    abnormality_type: Optional[str] = None
+    collection_datetime: Optional[str] = None  # Changed to string
+    result_datetime: Optional[str] = None  # Changed to string
+    ordering_provider_id: Optional[int] = None
+    result_status: Optional[str] = None
+    clinical_significance: Optional[str] = None
+
+class ImagingStudy(BaseModel):
+    """Imaging study table schema - FIXED"""
+    patient_id: Optional[int] = None  # Made optional
+    visit_id: Optional[int] = None
+    imaging_type: str
+    modality: Optional[str] = None
+    body_region: Optional[str] = None
+    study_datetime: str  # Changed to string
+    ordering_provider_id: Optional[int] = None
+    radiologist_id: Optional[int] = None
+    indication: Optional[str] = None
+    technique: Optional[str] = None
+    comparison: Optional[str] = None
+    findings: Optional[str] = None
+    impression: Optional[str] = None
+    key_findings: Optional[str] = None
+    report_status: Optional[str] = None
+    critical_findings: Optional[bool] = Field(default=False)
+
+class ProcedureTreatment(BaseModel):
+    """Procedure treatment table schema - FIXED"""
+    patient_id: Optional[int] = None  # Made optional
+    visit_id: Optional[int] = None
+    procedure_name: str
+    procedure_type: Optional[str] = None
+    cpt_code: Optional[str] = None
+    procedure_date: str  # Changed to string
+    duration_minutes: Optional[int] = Field(None, ge=0)
+    outcome: Optional[str] = None
+    outcome_details: Optional[str] = None
+    complications: Optional[str] = None
+    primary_provider_id: Optional[int] = None
+    therapy_type: Optional[str] = None
+    sessions_completed: Optional[int] = Field(None, ge=0)
+    sessions_planned: Optional[int] = Field(None, ge=0)
 
 class Pipeline1:
     def __init__(self, google_api_key):
@@ -55,8 +232,8 @@ class Pipeline1:
             print(f"Error chunking text: {e}")
             return [Document(page_content=text)]
 
-    def ask_questions_on_chunks(self, docs, question):
-        """Ask questions on document chunks using Gemini"""
+    def ask_questions_on_chunks(self, docs, question, patient_id):
+        """Ask questions on document chunks using Gemini with Pydantic validation"""
         try:
             llm = ChatGoogleGenerativeAI(
                 model="gemini-2.5-flash", 
@@ -64,19 +241,191 @@ class Pipeline1:
                 temperature=0.1
             )
             
-            chain = load_qa_chain(llm, chain_type="stuff")
-            result = chain.run(input_documents=docs, question=question)
-            return result
+            # Enhanced prompt to prevent hallucination
+            enhanced_question = f"""
+            {question}
+            
+            IMPORTANT INSTRUCTIONS:
+            1. Only extract information that is explicitly present in the document
+            2. Do not create, invent, or hallucinate any medical data
+            3. If a section/table has no information in the document, return an empty array []
+            4. If specific fields are not mentioned, leave them as null/None
+            5. Be conservative - only include data you can clearly identify from the text
+            6. Return valid JSON format only
+            7. For patient_id field, use the provided patient_id: {patient_id}
+            8. Use string format for all dates (e.g., "2013-12-30" or "12/30/2013")
+            
+            Expected JSON structure with exact field names:
+            {{
+                "visits": [{{
+                    "visit_date": "string (date)",
+                    "visit_type": "string",
+                    "department_name": "string", 
+                    "primary_provider_name": "string",
+                    "discharge_date": "string or null"
+                }}],
+                "diagnoses": [{{
+                    "patient_id": {patient_id},
+                    "diagnosis_name": "string",
+                    "icd10_code": "string or null",
+                    "is_chronic": false,
+                    "is_active": true,
+                    "severity": "string or null"
+                }}],
+                "medications": [{{
+                    "patient_id": {patient_id},
+                    "medication_name": "string",
+                    "dose": "string or null",
+                    "frequency": "string or null",
+                    "route": "string or null",
+                    "is_active": true
+                }}],
+                "symptoms": [{{
+                    "patient_id": {patient_id},
+                    "symptom_name": "string",
+                    "severity": "string or null",
+                    "duration": "string or null"
+                }}],
+                "vital_signs": [{{
+                    "patient_id": {patient_id},
+                    "measurement_datetime": "string (date)",
+                    "weight_kg": number or null,
+                    "height_cm": number or null,
+                    "pulse_bpm": number or null,
+                    "blood_pressure_systolic": number or null,
+                    "blood_pressure_diastolic": number or null,
+                    "temperature_celsius": number or null
+                }}]
+            }}
+
+            Use these EXACT field names. Always include patient_id with value {patient_id} where required.
+            """
+            
+            from langchain.chains import StuffDocumentsChain
+            from langchain.chains.llm import LLMChain
+            from langchain.prompts import PromptTemplate
+
+            # Create prompt template
+            prompt_template = """Use the following pieces of context to answer the question at the end.
+
+            {context}
+
+            Question: {question}
+            Answer:"""
+
+            prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
+            llm_chain = LLMChain(llm=llm, prompt=prompt)
+            stuff_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="context")
+
+            result = stuff_chain.invoke({"input_documents": docs, "question": enhanced_question})
+            result = result["output_text"]
+
+            
+            # Extract and validate JSON with Pydantic
+            json_start = result.find('{')
+            json_end = result.rfind('}') + 1
+            
+            if json_start != -1 and json_end != 0:
+                json_str = result[json_start:json_end]
+                try:
+                    raw_data = json.loads(json_str)
+                    
+                    # Fill in patient_id for all records that need it
+                    if raw_data.get('diagnoses'):
+                        for diagnosis in raw_data['diagnoses']:
+                            if diagnosis.get('patient_id') is None:
+                                diagnosis['patient_id'] = patient_id
+                    
+                    if raw_data.get('medications'):
+                        for medication in raw_data['medications']:
+                            if medication.get('patient_id') is None:
+                                medication['patient_id'] = patient_id
+                    
+                    if raw_data.get('symptoms'):
+                        for symptom in raw_data['symptoms']:
+                            if symptom.get('patient_id') is None:
+                                symptom['patient_id'] = patient_id
+                    
+                    if raw_data.get('vital_signs'):
+                        for vital in raw_data['vital_signs']:
+                            if vital.get('patient_id') is None:
+                                vital['patient_id'] = patient_id
+                    
+                    # Add patient_id to other records as needed
+                    for record_type in ['lab_results', 'imaging_studies', 'procedures']:
+                        if raw_data.get(record_type):
+                            for record in raw_data[record_type]:
+                                if record.get('patient_id') is None:
+                                    record['patient_id'] = patient_id
+                    
+                    # Validate each section with Pydantic models - only if data exists
+                    validated_data = {}
+                    
+                    try:
+                        if raw_data.get('visits'):
+                            validated_data['visits'] = [Visit(**v) for v in raw_data['visits']]
+                            print(f"✓ Validated {len(validated_data['visits'])} visits")
+                        
+                        if raw_data.get('visit_notes'):
+                            validated_data['visit_notes'] = [VisitNotes(**vn) for vn in raw_data['visit_notes']]
+                            print(f"✓ Validated {len(validated_data['visit_notes'])} visit notes")
+                        
+                        if raw_data.get('diagnoses'):
+                            validated_data['diagnoses'] = [Diagnosis(**d) for d in raw_data['diagnoses']]
+                            print(f"✓ Validated {len(validated_data['diagnoses'])} diagnoses")
+                        
+                        if raw_data.get('symptoms'):
+                            validated_data['symptoms'] = [Symptom(**s) for s in raw_data['symptoms']]
+                            print(f"✓ Validated {len(validated_data['symptoms'])} symptoms")
+                        
+                        if raw_data.get('medications'):
+                            validated_data['medications'] = [Medication(**m) for m in raw_data['medications']]
+                            print(f"✓ Validated {len(validated_data['medications'])} medications")
+                        
+                        if raw_data.get('vital_signs'):
+                            validated_data['vital_signs'] = [VitalSigns(**vs) for vs in raw_data['vital_signs']]
+                            print(f"✓ Validated {len(validated_data['vital_signs'])} vital signs")
+                        
+                        if raw_data.get('lab_results'):
+                            validated_data['lab_results'] = [LabResult(**lr) for lr in raw_data['lab_results']]
+                            print(f"✓ Validated {len(validated_data['lab_results'])} lab results")
+                        
+                        if raw_data.get('imaging_studies'):
+                            validated_data['imaging_studies'] = [ImagingStudy(**img) for img in raw_data['imaging_studies']]
+                            print(f"✓ Validated {len(validated_data['imaging_studies'])} imaging studies")
+                        
+                        if raw_data.get('procedures'):
+                            validated_data['procedures'] = [ProcedureTreatment(**p) for p in raw_data['procedures']]
+                            print(f"✓ Validated {len(validated_data['procedures'])} procedures")
+                        
+                        print("✓ All data validated successfully with Pydantic")
+                        return raw_data
+                        
+                    except ValidationError as ve:
+                        print(f"Pydantic validation error: {ve}")
+                        print("Raw data that failed validation:")
+                        print(json.dumps(raw_data, indent=2, default=str))
+                        # Return raw data even if validation fails, so we can see what was extracted
+                        return raw_data
+                    
+                except json.JSONDecodeError as e:
+                    print(f"JSON parsing error: {e}")
+                    print(f"Raw response: {result}")
+                    return None
+            else:
+                print("No valid JSON found in response")
+                print(f"Raw response: {result}")
+                return None
+                
         except Exception as e:
             print(f"Error processing with Gemini: {e}")
             return None
-        
 
-
-
-#component to save extracted JSON data to MySQL database       
-    def save_to_mysql(self, json_data, db_config):
+    def save_to_mysql(self, json_data, db_config, patient_id):
         """Save extracted JSON data to MySQL database"""
+        connection = None
+        cursor = None
+        
         try:
             connection = mysql.connector.connect(**db_config)
             cursor = connection.cursor()
@@ -84,97 +433,164 @@ class Pipeline1:
             # Parse JSON data
             data = json.loads(json_data) if isinstance(json_data, str) else json_data
             
-            # Insert Patient
-            patient_query = """
-            INSERT INTO patients (medical_record_number, created_date, updated_date) 
-            VALUES (%s, %s, %s)
-            """
-            patient_data = data['patient']
-            cursor.execute(patient_query, (
-                patient_data['medical_record_number'],
-                patient_data['created_date'],
-                patient_data.get('updated_date')
-            ))
-            patient_id = cursor.lastrowid
-            
-            # Insert Provider if exists
-            if data.get('provider'):
-                provider_query = """
-                INSERT INTO providers (provider_name, npi_number, specialty, department_id, active_status) 
-                VALUES (%s, %s, %s, %s, %s)
-                """
-                provider_data = data['provider']
-                cursor.execute(provider_query, (
-                    provider_data['provider_name'],
-                    provider_data['npi_number'],
-                    provider_data.get('specialty'),
-                    provider_data.get('department_id'),
-                    provider_data.get('active_status', True)
-                ))
-                provider_id = cursor.lastrowid
-            
-            # Insert Department if exists
-            if data.get('department'):
-                dept_query = """
-                INSERT INTO departments (department_name, department_type, system_name) 
+            # Validate patient exists if not then creates new patient
+            patient_check_query = "SELECT patient_id FROM patients WHERE patient_id = %s"
+            cursor.execute(patient_check_query, (patient_id,))
+            if not cursor.fetchone():
+                # Create new patient
+                create_patient_query = """
+                INSERT INTO patients (patient_id, medical_record_number, created_date) 
                 VALUES (%s, %s, %s)
                 """
-                dept_data = data['department']
-                cursor.execute(dept_query, (
-                    dept_data['department_name'],
-                    dept_data.get('department_type'),
-                    dept_data.get('system_name')
-                ))
-                dept_id = cursor.lastrowid
+                medical_record_number = f"MRN{patient_id:06d}"  # Generate MRN like MRN000001
+                cursor.execute(create_patient_query, (patient_id, medical_record_number, datetime.now()))
+                print(f"✓ Created new patient with ID {patient_id} and MRN {medical_record_number}")
             
-            # Insert Visits
-            for visit in data.get('visits', []):
-                visit_query = """
-                INSERT INTO visits (patient_id, visit_date, visit_type, department_id, primary_provider_id, discharge_date) 
-                VALUES (%s, %s, %s, %s, %s, %s)
-                """
-                cursor.execute(visit_query, (
-                    patient_id, visit['visit_date'], visit['visit_type'],
-                    visit.get('department_id'), visit.get('primary_provider_id'), visit.get('discharge_date')
-                ))
-                visit_id = cursor.lastrowid
-                
-                # Insert Visit Notes
-                if visit.get('full_note_text'):
-                    note_query = """
-                    INSERT INTO visit_notes (visit_id, note_date, note_type, full_note_text, chief_complaint, 
-                    history_present_illness, review_of_systems, physical_exam, assessment, plan, author_provider_id,
-                    extraction_confidence, extraction_method, extraction_timestamp) 
+            # Insert Visits - only if data exists
+            visit_ids = []
+            if data.get('visits'):
+                for visit_data in data['visits']:
+                    visit_query = """
+                    INSERT INTO visits (patient_id, visit_date, visit_type, department_name, primary_provider_name, discharge_date) 
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    """
+                    # Convert date string to datetime if needed
+                    visit_date = visit_data['visit_date']
+                    if isinstance(visit_date, str):
+                        try:
+                            # Try to parse common date formats
+                            if '/' in visit_date:
+                                visit_date = datetime.strptime(visit_date, '%m/%d/%Y')
+                            elif '-' in visit_date:
+                                visit_date = datetime.strptime(visit_date, '%Y-%m-%d')
+                        except:
+                            visit_date = datetime.now()  # fallback
+                    
+                    cursor.execute(visit_query, (
+                        patient_id, 
+                        visit_date, 
+                        visit_data['visit_type'],
+                        visit_data['department_name'], 
+                        visit_data['primary_provider_name'], 
+                        visit_data.get('discharge_date')
+                    ))
+                    visit_ids.append(cursor.lastrowid)
+                    print(f"✓ Inserted visit: {visit_data['visit_type']} on {visit_date}")
+            
+            # Insert Diagnoses - only if data exists
+            if data.get('diagnoses'):
+                for diag_data in data['diagnoses']:
+                    diag_query = """
+                    INSERT INTO diagnoses (patient_id, visit_id, diagnosis_name, icd10_code, onset_date, resolution_date,
+                    is_chronic, is_active, severity, diagnosis_source, diagnosis_context, confidence_score) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """
+                    cursor.execute(diag_query, (
+                        diag_data.get('patient_id', patient_id),
+                        diag_data.get('visit_id'),
+                        diag_data['diagnosis_name'],
+                        diag_data.get('icd10_code'),
+                        diag_data.get('onset_date'),
+                        diag_data.get('resolution_date'),
+                        diag_data.get('is_chronic', False),
+                        diag_data.get('is_active', True),
+                        diag_data.get('severity'),
+                        diag_data.get('diagnosis_source'),
+                        diag_data.get('diagnosis_context'),
+                        diag_data.get('confidence_score')
+                    ))
+                    print(f"✓ Inserted diagnosis: {diag_data['diagnosis_name']}")
+            
+            # Insert Medications - only if data exists
+            if data.get('medications'):
+                for med_data in data['medications']:
+                    med_query = """
+                    INSERT INTO medications (patient_id, visit_id, medication_name, generic_name, dose, dose_unit,
+                    frequency, route, start_date, end_date, is_active, is_prn, sig_text, patient_instructions) 
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     """
-                    cursor.execute(note_query, (
-                        visit_id, visit.get('note_date'), visit.get('note_type'), visit.get('full_note_text'),
-                        visit.get('chief_complaint'), visit.get('history_present_illness'), visit.get('review_of_systems'),
-                        visit.get('physical_exam'), visit.get('assessment'), visit.get('plan'), visit.get('author_provider_id'),
-                        visit.get('extraction_confidence'), visit.get('extraction_method'), visit.get('extraction_timestamp')
+                    cursor.execute(med_query, (
+                        med_data.get('patient_id', patient_id),
+                        med_data.get('visit_id'),
+                        med_data['medication_name'],
+                        med_data.get('generic_name'),
+                        med_data.get('dose'),
+                        med_data.get('dose_unit'),
+                        med_data.get('frequency'),
+                        med_data.get('route'),
+                        med_data.get('start_date'),
+                        med_data.get('end_date'),
+                        med_data.get('is_active', True),
+                        med_data.get('is_prn', False),
+                        med_data.get('sig_text'),
+                        med_data.get('patient_instructions')
                     ))
+                    print(f"✓ Inserted medication: {med_data['medication_name']}")
             
-            # Insert Diagnoses
-            for diagnosis in data.get('diagnoses', []):
-                diag_query = """
-                INSERT INTO diagnoses (patient_id, visit_id, diagnosis_name, icd10_code, onset_date, resolution_date,
-                is_chronic, is_active, severity, diagnosing_provider_id, diagnosis_source, diagnosis_context,
-                confidence_score, updated_date) 
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """
-                cursor.execute(diag_query, (
-                    patient_id, diagnosis.get('visit_id'), diagnosis['diagnosis_name'], diagnosis.get('icd10_code'),
-                    diagnosis.get('onset_date'), diagnosis.get('resolution_date'), diagnosis.get('is_chronic', False),
-                    diagnosis.get('is_active', True), diagnosis.get('severity'), diagnosis.get('diagnosing_provider_id'),
-                    diagnosis.get('diagnosis_source'), diagnosis.get('diagnosis_context'), diagnosis.get('confidence_score'),
-                    diagnosis.get('updated_date')
-                ))
+            # Insert Symptoms - only if data exists
+            if data.get('symptoms'):
+                for symptom_data in data['symptoms']:
+                    symptom_query = """
+                    INSERT INTO symptoms (patient_id, visit_id, symptom_name, onset_date, duration, frequency,
+                    severity, symptom_description, alleviating_factors, aggravating_factors, reported_date, resolution_date) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """
+                    cursor.execute(symptom_query, (
+                        symptom_data.get('patient_id', patient_id),
+                        symptom_data.get('visit_id'),
+                        symptom_data['symptom_name'],
+                        symptom_data.get('onset_date'),
+                        symptom_data.get('duration'),
+                        symptom_data.get('frequency'),
+                        symptom_data.get('severity'),
+                        symptom_data.get('symptom_description'),
+                        symptom_data.get('alleviating_factors'),
+                        symptom_data.get('aggravating_factors'),
+                        symptom_data.get('reported_date'),
+                        symptom_data.get('resolution_date')
+                    ))
+                    print(f"✓ Inserted symptom: {symptom_data['symptom_name']}")
             
-            # Similar inserts for other tables...
-            # (medications, symptoms, vital_signs, lab_results, imaging_studies, procedures)
+            # Insert Vital Signs - only if data exists
+            if data.get('vital_signs'):
+                for vs_data in data['vital_signs']:
+                    vs_query = """
+                    INSERT INTO vital_signs (patient_id, visit_id, measurement_datetime, weight_kg, height_cm, bmi,
+                    pulse_bpm, blood_pressure_systolic, blood_pressure_diastolic, temperature_celsius, 
+                    respiratory_rate, oxygen_saturation_percent, pain_scale) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """
+                    
+                    # Handle measurement_datetime
+                    measurement_dt = vs_data.get('measurement_datetime')
+                    if isinstance(measurement_dt, str):
+                        try:
+                            if '/' in measurement_dt:
+                                measurement_dt = datetime.strptime(measurement_dt, '%m/%d/%Y')
+                            elif '-' in measurement_dt:
+                                measurement_dt = datetime.strptime(measurement_dt, '%Y-%m-%d')
+                        except:
+                            measurement_dt = datetime.now()
+                    
+                    cursor.execute(vs_query, (
+                        vs_data.get('patient_id', patient_id), 
+                        vs_data.get('visit_id'), 
+                        measurement_dt,
+                        vs_data.get('weight_kg'), 
+                        vs_data.get('height_cm'), 
+                        vs_data.get('bmi'),
+                        vs_data.get('pulse_bpm'), 
+                        vs_data.get('blood_pressure_systolic'), 
+                        vs_data.get('blood_pressure_diastolic'), 
+                        vs_data.get('temperature_celsius'),
+                        vs_data.get('respiratory_rate'), 
+                        vs_data.get('oxygen_saturation_percent'),
+                        vs_data.get('pain_scale')
+                    ))
+                    print(f"✓ Inserted vital signs for {measurement_dt}")
             
             connection.commit()
-            print(f"Data successfully saved to MySQL database")
+            print(f"✓ Data successfully saved to MySQL database")
             
         except Error as e:
             print(f"Error saving to MySQL: {e}")
@@ -182,13 +598,21 @@ class Pipeline1:
                 connection.rollback()
         finally:
             if connection and connection.is_connected():
-                cursor.close()
+                if cursor:
+                    cursor.close()
                 connection.close()
 
 def main():
     ############################# Configuration###########################################
     PDF_PATH = r"C:\codes\agentic_ai_basys\training_files_patient\1.pdf"
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "YOUR_GOOGLE_API_KEY_HERE")
+    
+    # Get patient ID from user
+    patient_id = input("Enter Patient ID: ").strip()
+    if not patient_id or not patient_id.isdigit():
+        print("Error: Please enter a valid numeric Patient ID")
+        return
+    patient_id = int(patient_id)
     #######################################################################################
     
     if not os.path.exists(PDF_PATH):
@@ -213,258 +637,37 @@ def main():
         # Step 3: Extract medical data in structured JSON format
         print("Step 3: Extracting medical data using Gemini...")
         
-        question = """
-        Extract all medical information from this document and format it as a JSON object matching this exact structure. 
-        Use null for missing values. All dates should be in ISO format (YYYY-MM-DDTHH:MM:SS).
+        question = "Extract medical information and return as valid JSON matching the expected schema structure."
         
-        Return ONLY the JSON object with this structure:
-        {
-            "patient": {
-                "patient_id": 1,
-                "medical_record_number": "extracted_or_generated_mrn",
-                "created_date": "current_datetime_iso",
-                "updated_date": null
-            },
-            "provider": {
-                "provider_id": 1,
-                "provider_name": "doctor_name_if_found",
-                "npi_number": "npi_if_found_or_generated",
-                "specialty": "specialty_if_found",
-                "department_id": null,
-                "active_status": true
-            },
-            "department": {
-                "department_id": 1,
-                "department_name": "department_if_found",
-                "department_type": "type_if_found",
-                "system_name": null
-            },
-            "visits": [
-                {
-                    "visit_id": 1,
-                    "patient_id": 1,
-                    "visit_date": "visit_date_iso",
-                    "visit_type": "visit_type_extracted",
-                    "department_id": 1,
-                    "primary_provider_id": 1,
-                    "discharge_date": null,
-                    "note_id": 1,
-                    "note_date": "note_date_iso",
-                    "note_type": "note_type",
-                    "full_note_text": "complete_note_text",
-                    "chief_complaint": "chief_complaint_text",
-                    "history_present_illness": "hpi_text",
-                    "review_of_systems": "ros_text",
-                    "physical_exam": "pe_text",
-                    "assessment": "assessment_text",
-                    "plan": "plan_text",
-                    "author_provider_id": 1,
-                    "extraction_confidence": 0.95,
-                    "extraction_method": "gemini_langchain",
-                    "extraction_timestamp": "current_datetime_iso"
-                }
-            ],
-            "diagnoses": [
-                {
-                    "diagnosis_id": 1,
-                    "patient_id": 1,
-                    "visit_id": 1,
-                    "diagnosis_name": "diagnosis_name",
-                    "icd10_code": "icd10_code_if_found",
-                    "onset_date": "onset_date_iso_if_found",
-                    "resolution_date": null,
-                    "is_chronic": false,
-                    "is_active": true,
-                    "severity": "severity_if_mentioned",
-                    "diagnosing_provider_id": 1,
-                    "diagnosis_source": "clinical_notes",
-                    "diagnosis_context": "context_if_available",
-                    "confidence_score": 0.9,
-                    "updated_date": null
-                }
-            ],
-            "symptoms": [
-                {
-                    "symptom_id": 1,
-                    "patient_id": 1,
-                    "visit_id": 1,
-                    "symptom_name": "symptom_name",
-                    "onset_date": "onset_date_if_found",
-                    "duration": "duration_if_mentioned",
-                    "frequency": "frequency_if_mentioned",
-                    "severity": "severity_if_mentioned",
-                    "symptom_description": "detailed_description",
-                    "alleviating_factors": "factors_that_help",
-                    "aggravating_factors": "factors_that_worsen",
-                    "reported_date": "when_reported_iso",
-                    "resolution_date": null
-                }
-            ],
-            "medications": [
-                {
-                    "medication_id": 1,
-                    "patient_id": 1,
-                    "visit_id": 1,
-                    "medication_name": "medication_name",
-                    "generic_name": "generic_name_if_available",
-                    "rxnorm_code": null,
-                    "dose": "dose_amount",
-                    "dose_unit": "mg_or_unit",
-                    "frequency": "frequency_description",
-                    "route": "route_of_administration",
-                    "start_date": "start_date_if_available",
-                    "end_date": null,
-                    "discontinuation_reason": null,
-                    "is_active": true,
-                    "is_prn": false,
-                    "prescribing_provider_id": 1,
-                    "sig_text": "sig_instructions",
-                    "patient_instructions": "patient_instructions",
-                    "updated_date": null
-                }
-            ],
-            "vital_signs": [
-                {
-                    "vital_sign_id": 1,
-                    "patient_id": 1,
-                    "visit_id": 1,
-                    "measurement_datetime": "measurement_datetime_iso",
-                    "weight_kg": null,
-                    "height_cm": null,
-                    "bmi": null,
-                    "pulse_bpm": null,
-                    "blood_pressure_systolic": null,
-                    "blood_pressure_diastolic": null,
-                    "temperature_celsius": null,
-                    "respiratory_rate": null,
-                    "oxygen_saturation_percent": null,
-                    "pain_scale": null,
-                    "additional_vitals": "any_other_vitals",
-                    "measurement_context": "context_of_measurement",
-                    "measured_by_id": 1
-                }
-            ],
-            "lab_results": [
-                {
-                    "lab_result_id": 1,
-                    "patient_id": 1,
-                    "visit_id": 1,
-                    "lab_name": "lab_name",
-                    "test_name": "specific_test_name",
-                    "loinc_code": null,
-                    "result_value": "result_as_string",
-                    "result_numeric": null,
-                    "unit_of_measurement": "unit",
-                    "reference_range_low": null,
-                    "reference_range_high": null,
-                    "reference_range_text": "reference_range_text",
-                    "abnormality_flag": false,
-                    "abnormality_type": null,
-                    "collection_datetime": "collection_datetime_iso",
-                    "result_datetime": "result_datetime_iso",
-                    "ordering_provider_id": 1,
-                    "result_status": "final",
-                    "clinical_significance": "significance_if_noted"
-                }
-            ],
-            "imaging_studies": [
-                {
-                    "imaging_id": 1,
-                    "patient_id": 1,
-                    "visit_id": 1,
-                    "imaging_type": "xray_ct_mri_etc",
-                    "modality": "specific_modality",
-                    "body_region": "body_region_studied",
-                    "study_datetime": "study_datetime_iso",
-                    "ordering_provider_id": 1,
-                    "radiologist_id": null,
-                    "indication": "reason_for_study",
-                    "technique": "technique_used",
-                    "comparison": "comparison_studies",
-                    "findings": "findings_text",
-                    "impression": "impression_text",
-                    "key_findings": "key_findings_summary",
-                    "report_status": "final",
-                    "critical_findings": false
-                }
-            ],
-            "procedures": [
-                {
-                    "procedure_id": 1,
-                    "patient_id": 1,
-                    "visit_id": 1,
-                    "procedure_name": "procedure_name",
-                    "procedure_type": "type_of_procedure", 
-                    "cpt_code": null,
-                    "procedure_date": "procedure_date_iso",
-                    "duration_minutes": null,
-                    "outcome": "outcome_description",
-                    "outcome_details": "detailed_outcome",
-                    "complications": null,
-                    "primary_provider_id": 1,
-                    "therapy_type": null,
-                    "sessions_completed": null,
-                    "sessions_planned": null
-                }
-            ]
-        }
-        
-        Extract all available information from the medical document. If information is not available, use null. 
-        Ensure all arrays contain at least one object if any relevant data is found, otherwise use empty arrays [].
-        """
-        
-        answer = pipeline1_obj.ask_questions_on_chunks(chunks, question)
+        answer = pipeline1_obj.ask_questions_on_chunks(chunks, question, patient_id)
         
         if answer:
             print("\n" + "="*50)
-            print("EXTRACTED MEDICAL RECORD (JSON):")
+            print("EXTRACTED MEDICAL RECORD (JSON - Pydantic Validated):")
             print("="*50)
             
-            try:
-                # Clean the response to extract JSON
-                json_start = answer.find('{')
-                json_end = answer.rfind('}') + 1
-                
-                if json_start != -1 and json_end != 0:
-                    json_str = answer[json_start:json_end]
-                    
-                    # Parse and validate JSON
-                    parsed_json = json.loads(json_str)
-                    
-                    # Pretty print the JSON
-                    formatted_json = json.dumps(parsed_json, indent=2, ensure_ascii=False)
-                    print(formatted_json)
-                    
-                    # Optionally save to file
-                    output_file = "extracted_medical_record.json"
-                    with open(output_file, 'w', encoding='utf-8') as f:
-                        f.write(formatted_json)
-                    print(f"\nJSON saved to: {output_file}")
-                    
-                else:
-                    print("No valid JSON found in response.")
-                    print("Raw response:")
-                    print(answer)
-                    
-            except json.JSONDecodeError as e:
-                print(f"JSON parsing error: {e}")
-                print("Raw response:")
-                print(answer)
+            # Pretty print the validated JSON
+            formatted_json = json.dumps(answer, indent=2, ensure_ascii=False, default=str)
+            print(formatted_json)
+            
+            # Save to file
+            output_file = "extracted_medical_record.json"
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(formatted_json)
+            print(f"\n✓ Validated JSON saved to: {output_file}")
+            
+            # Add database configuration
+            db_config = {
+                'host': 'localhost',
+                'database': 'medical_records',
+                'user': 'root',
+                'password': '27ramome'
+            }
+
+            # Save to database
+            pipeline1_obj.save_to_mysql(answer, db_config, patient_id)
         else:
             print("No response received from Gemini")
-
-
-        # Add database configuration
-        db_config = {
-            'host': 'localhost',
-            'database': 'medical_records',
-            'user': 'root',
-            'password': '27ramome'
-        }
-
-        # Save to database
-        if parsed_json:
-            pipeline1_obj.save_to_mysql(parsed_json, db_config)
             
     except Exception as e:
         print(f"Error in main execution: {e}")
