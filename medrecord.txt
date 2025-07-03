@@ -1,0 +1,15 @@
+Patient Name: John Doe
+DOB: 1985-07-15
+Gender: Male
+Patient ID: 123456789
+
+Visit Date: 2025-06-30
+Physician: Dr. Emily Smith, MD
+Clinic: Downtown Medical Center
+
+Chief Complaint:
+Patient reports persistent headaches and occasional dizziness for the past two weeks.
+
+History of Present Illness:
+John Doe is a 39-year-old male presenting with a two-week history of intermittent, throbbing headaches localized mostly to the frontal region. The headaches last 1-2 hours and are sometimes accompanied by nausea but no vomiting. Patient denies any recent trauma, visual changes, or loss of consciousness.
+

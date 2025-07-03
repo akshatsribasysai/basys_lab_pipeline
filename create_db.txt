@@ -1,0 +1,232 @@
+
+-- Create database
+CREATE DATABASE medical_records;
+USE medical_records;
+
+-- Create patients table (matches Python code)
+CREATE TABLE patients (
+    patient_id INT AUTO_INCREMENT PRIMARY KEY,
+    medical_record_number VARCHAR(50) UNIQUE NOT NULL,
+    created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_date DATETIME NULL
+);
+
+-- Create departments table
+CREATE TABLE departments (
+    department_id INT AUTO_INCREMENT PRIMARY KEY,
+    department_name VARCHAR(100) NOT NULL,
+    department_type VARCHAR(50),
+    system_name VARCHAR(100)
+);
+
+-- Create providers table
+CREATE TABLE providers (
+    provider_id INT AUTO_INCREMENT PRIMARY KEY,
+    provider_name VARCHAR(100) NOT NULL,
+    npi_number VARCHAR(20) UNIQUE NOT NULL,
+    specialty VARCHAR(100),
+    department_id INT,
+    active_status BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (department_id) REFERENCES departments(department_id)
+);
+
+-- MODIFIED: Create visits table (added department_name and primary_provider_name columns)
+CREATE TABLE visits (
+    visit_id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL,
+    visit_date DATETIME NOT NULL,
+    visit_type VARCHAR(50) NOT NULL,
+    department_name VARCHAR(100),  -- ADDED: to match Python code
+    primary_provider_name VARCHAR(100),  -- ADDED: to match Python code
+    department_id INT,
+    primary_provider_id INT,
+    discharge_date DATETIME,
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
+    FOREIGN KEY (department_id) REFERENCES departments(department_id),
+    FOREIGN KEY (primary_provider_id) REFERENCES providers(provider_id)
+);
+
+-- Create visit_notes table (no changes needed)
+CREATE TABLE visit_notes (
+    note_id INT AUTO_INCREMENT PRIMARY KEY,
+    visit_id INT NOT NULL,
+    note_date DATETIME,
+    note_type VARCHAR(50),
+    full_note_text TEXT,
+    chief_complaint TEXT,
+    history_present_illness TEXT,
+    review_of_systems TEXT,
+    physical_exam TEXT,
+    assessment TEXT,
+    plan TEXT,
+    author_provider_id INT,
+    extraction_confidence DECIMAL(3,2),
+    extraction_method VARCHAR(50),
+    extraction_timestamp DATETIME,
+    FOREIGN KEY (visit_id) REFERENCES visits(visit_id),
+    FOREIGN KEY (author_provider_id) REFERENCES providers(provider_id)
+);
+
+-- Create diagnoses table (no changes needed)
+CREATE TABLE diagnoses (
+    diagnosis_id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL,
+    visit_id INT,
+    diagnosis_name VARCHAR(200) NOT NULL,
+    icd10_code VARCHAR(10),
+    onset_date DATETIME,
+    resolution_date DATETIME,
+    is_chronic BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE,
+    severity VARCHAR(20),
+    diagnosing_provider_id INT,
+    diagnosis_source VARCHAR(50),
+    diagnosis_context TEXT,
+    confidence_score DECIMAL(3,2),
+    updated_date DATETIME,
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
+    FOREIGN KEY (visit_id) REFERENCES visits(visit_id),
+    FOREIGN KEY (diagnosing_provider_id) REFERENCES providers(provider_id)
+);
+
+-- Create symptoms table (no changes needed)
+CREATE TABLE symptoms (
+    symptom_id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL,
+    visit_id INT,
+    symptom_name VARCHAR(100) NOT NULL,
+    onset_date DATETIME,
+    duration VARCHAR(50),
+    frequency VARCHAR(50),
+    severity VARCHAR(20),
+    symptom_description TEXT,
+    alleviating_factors TEXT,
+    aggravating_factors TEXT,
+    reported_date DATETIME,
+    resolution_date DATETIME,
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
+    FOREIGN KEY (visit_id) REFERENCES visits(visit_id)
+);
+
+-- Create medications table (no changes needed)
+CREATE TABLE medications (
+    medication_id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL,
+    visit_id INT,
+    medication_name VARCHAR(100) NOT NULL,
+    generic_name VARCHAR(100),
+    rxnorm_code VARCHAR(20),
+    dose VARCHAR(50),
+    dose_unit VARCHAR(20),
+    frequency VARCHAR(100),
+    route VARCHAR(50),
+    start_date DATE,
+    end_date DATE,
+    discontinuation_reason TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    is_prn BOOLEAN DEFAULT FALSE,
+    prescribing_provider_id INT,
+    sig_text TEXT,
+    patient_instructions TEXT,
+    updated_date DATETIME,
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
+    FOREIGN KEY (visit_id) REFERENCES visits(visit_id),
+    FOREIGN KEY (prescribing_provider_id) REFERENCES providers(provider_id)
+);
+
+-- Create vital_signs table (no changes needed)
+CREATE TABLE vital_signs (
+    vital_sign_id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL,
+    visit_id INT,
+    measurement_datetime DATETIME NOT NULL,
+    weight_kg DECIMAL(5,2),
+    height_cm DECIMAL(5,2),
+    bmi DECIMAL(4,2),
+    pulse_bpm INT,
+    blood_pressure_systolic INT,
+    blood_pressure_diastolic INT,
+    temperature_celsius DECIMAL(4,2),
+    respiratory_rate INT,
+    oxygen_saturation_percent INT,
+    pain_scale INT CHECK (pain_scale >= 0 AND pain_scale <= 10),
+    additional_vitals TEXT,
+    measurement_context VARCHAR(100),
+    measured_by_id INT,
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
+    FOREIGN KEY (visit_id) REFERENCES visits(visit_id),
+    FOREIGN KEY (measured_by_id) REFERENCES providers(provider_id)
+);
+
+-- Create lab_results table (no changes needed)
+CREATE TABLE lab_results (
+    lab_result_id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL,
+    visit_id INT,
+    lab_name VARCHAR(100) NOT NULL,
+    test_name VARCHAR(100) NOT NULL,
+    loinc_code VARCHAR(20),
+    result_value VARCHAR(100) NOT NULL,
+    result_numeric DECIMAL(15,6),
+    unit_of_measurement VARCHAR(50),
+    reference_range_low DECIMAL(15,6),
+    reference_range_high DECIMAL(15,6),
+    reference_range_text VARCHAR(200),
+    abnormality_flag BOOLEAN DEFAULT FALSE,
+    abnormality_type VARCHAR(50),
+    collection_datetime DATETIME,
+    result_datetime DATETIME,
+    ordering_provider_id INT,
+    result_status VARCHAR(20),
+    clinical_significance TEXT,
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
+    FOREIGN KEY (visit_id) REFERENCES visits(visit_id),
+    FOREIGN KEY (ordering_provider_id) REFERENCES providers(provider_id)
+);
+
+-- Create imaging_studies table (no changes needed)
+CREATE TABLE imaging_studies (
+    imaging_id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL,
+    visit_id INT,
+    imaging_type VARCHAR(50) NOT NULL,
+    modality VARCHAR(50),
+    body_region VARCHAR(100),
+    study_datetime DATETIME NOT NULL,
+    ordering_provider_id INT,
+    radiologist_id INT,
+    indication TEXT,
+    technique TEXT,
+    comparison TEXT,
+    findings TEXT,
+    impression TEXT,
+    key_findings TEXT,
+    report_status VARCHAR(20),
+    critical_findings BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
+    FOREIGN KEY (visit_id) REFERENCES visits(visit_id),
+    FOREIGN KEY (ordering_provider_id) REFERENCES providers(provider_id),
+    FOREIGN KEY (radiologist_id) REFERENCES providers(provider_id)
+);
+
+-- Create procedures table (no changes needed)
+CREATE TABLE procedures (
+    procedure_id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL,
+    visit_id INT,
+    procedure_name VARCHAR(200) NOT NULL,
+    procedure_type VARCHAR(100),
+    cpt_code VARCHAR(10),
+    procedure_date DATETIME NOT NULL,
+    duration_minutes INT,
+    outcome VARCHAR(100),
+    outcome_details TEXT,
+    complications TEXT,
+    primary_provider_id INT,
+    therapy_type VARCHAR(100),
+    sessions_completed INT,
+    sessions_planned INT,
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
+    FOREIGN KEY (visit_id) REFERENCES visits(visit_id),
+    FOREIGN KEY (primary_provider_id) REFERENCES providers(provider_id)
+);

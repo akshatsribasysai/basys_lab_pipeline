@@ -1,0 +1,629 @@
+{
+  "patient": {
+    "patient_id": 12434,
+    "medical_record_number": {
+      "type": "str",
+      "optional": false
+    },
+    "created_date": {
+      "type": "unknown",
+      "optional": false
+    },
+    "updated_date": {
+      "type": "unknown",
+      "optional": true
+    }
+  },
+  "visit": {
+    "visit_id": {
+      "type": "int",
+      "optional": false
+    },
+    "visit_date": {
+      "type": "str",
+      "optional": false
+    },
+    "visit_type": {
+      "type": "str",
+      "optional": false
+    },
+    "department_name": {
+      "type": "str",
+      "optional": false
+    },
+    "primary_provider": {
+      "provider_name": {
+        "type": "str",
+        "optional": false
+      },
+      "npi_number": {
+        "type": "str",
+        "optional": false
+      },
+      "specialty": {
+        "type": "str",
+        "optional": true
+      },
+      "active_status": {
+        "type": "bool",
+        "optional": false
+      }
+    },
+    "discharge_date": {
+      "type": "str",
+      "optional": true
+    }
+  },
+  "visitnotes": {
+    "visit_id": {
+      "type": "int",
+      "optional": true
+    },
+    "note_date": {
+      "type": "str",
+      "optional": true
+    },
+    "note_type": {
+      "type": "str",
+      "optional": true
+    },
+    "full_note_text": {
+      "type": "str",
+      "optional": true
+    },
+    "chief_complaint": {
+      "type": "str",
+      "optional": true
+    },
+    "history_present_illness": {
+      "type": "str",
+      "optional": true
+    },
+    "review_of_systems": {
+      "type": "str",
+      "optional": true
+    },
+    "physical_exam": {
+      "type": "str",
+      "optional": true
+    },
+    "assessment": {
+      "type": "str",
+      "optional": true
+    },
+    "plan": {
+      "type": "str",
+      "optional": true
+    },
+    "author_provider": {
+      "provider_name": {
+        "type": "str",
+        "optional": false
+      },
+      "npi_number": {
+        "type": "str",
+        "optional": false
+      },
+      "specialty": {
+        "type": "str",
+        "optional": true
+      },
+      "active_status": {
+        "type": "bool",
+        "optional": false
+      }
+    },
+    "extraction_confidence": {
+      "type": "float",
+      "optional": true
+    },
+    "extraction_method": {
+      "type": "str",
+      "optional": true
+    },
+    "extraction_timestamp": {
+      "type": "str",
+      "optional": true
+    }
+  },
+  "diagnosis": {
+    "patient_id": 12434,
+    "visit_id": {
+      "type": "int",
+      "optional": true
+    },
+    "diagnosis_name": {
+      "type": "str",
+      "optional": false
+    },
+    "icd10_code": {
+      "type": "str",
+      "optional": true
+    },
+    "onset_date": {
+      "type": "str",
+      "optional": true
+    },
+    "resolution_date": {
+      "type": "str",
+      "optional": true
+    },
+    "is_chronic": {
+      "type": "bool",
+      "optional": true
+    },
+    "is_active": {
+      "type": "bool",
+      "optional": true
+    },
+    "severity": {
+      "type": "str",
+      "optional": true
+    },
+    "diagnosing_provider": {
+      "provider_name": {
+        "type": "str",
+        "optional": false
+      },
+      "npi_number": {
+        "type": "str",
+        "optional": false
+      },
+      "specialty": {
+        "type": "str",
+        "optional": true
+      },
+      "active_status": {
+        "type": "bool",
+        "optional": false
+      }
+    },
+    "diagnosis_source": {
+      "type": "str",
+      "optional": true
+    },
+    "diagnosis_context": {
+      "type": "str",
+      "optional": true
+    },
+    "confidence_score": {
+      "type": "float",
+      "optional": true
+    },
+    "updated_date": {
+      "type": "str",
+      "optional": true
+    }
+  },
+  "symptom": {
+    "patient_id": 12434,
+    "visit_id": {
+      "type": "int",
+      "optional": true
+    },
+    "symptom_name": {
+      "type": "str",
+      "optional": false
+    },
+    "onset_date": {
+      "type": "str",
+      "optional": true
+    },
+    "duration": {
+      "type": "str",
+      "optional": true
+    },
+    "frequency": {
+      "type": "str",
+      "optional": true
+    },
+    "severity": {
+      "type": "str",
+      "optional": true
+    },
+    "symptom_description": {
+      "type": "str",
+      "optional": true
+    },
+    "alleviating_factors": {
+      "type": "str",
+      "optional": true
+    },
+    "aggravating_factors": {
+      "type": "str",
+      "optional": true
+    },
+    "reported_date": {
+      "type": "str",
+      "optional": true
+    },
+    "resolution_date": {
+      "type": "str",
+      "optional": true
+    }
+  },
+  "medication": {
+    "patient_id": 12434,
+    "visit_id": {
+      "type": "int",
+      "optional": true
+    },
+    "medication_name": {
+      "type": "str",
+      "optional": false
+    },
+    "generic_name": {
+      "type": "str",
+      "optional": true
+    },
+    "rxnorm_code": {
+      "type": "str",
+      "optional": true
+    },
+    "dose": {
+      "type": "str",
+      "optional": true
+    },
+    "dose_unit": {
+      "type": "str",
+      "optional": true
+    },
+    "frequency": {
+      "type": "str",
+      "optional": true
+    },
+    "route": {
+      "type": "str",
+      "optional": true
+    },
+    "start_date": {
+      "type": "str",
+      "optional": true
+    },
+    "end_date": {
+      "type": "str",
+      "optional": true
+    },
+    "discontinuation_reason": {
+      "type": "str",
+      "optional": true
+    },
+    "is_active": {
+      "type": "bool",
+      "optional": true
+    },
+    "is_prn": {
+      "type": "bool",
+      "optional": true
+    },
+    "prescribing_provider": {
+      "provider_name": {
+        "type": "str",
+        "optional": false
+      },
+      "npi_number": {
+        "type": "str",
+        "optional": false
+      },
+      "specialty": {
+        "type": "str",
+        "optional": true
+      },
+      "active_status": {
+        "type": "bool",
+        "optional": false
+      }
+    },
+    "sig_text": {
+      "type": "str",
+      "optional": true
+    },
+    "patient_instructions": {
+      "type": "str",
+      "optional": true
+    },
+    "updated_date": {
+      "type": "str",
+      "optional": true
+    }
+  },
+  "vitalsigns": {
+    "patient_id": 12434,
+    "visit_id": {
+      "type": "int",
+      "optional": true
+    },
+    "measurement_datetime": {
+      "type": "str",
+      "optional": false
+    },
+    "weight_kg": {
+      "type": "float",
+      "optional": true
+    },
+    "height_cm": {
+      "type": "float",
+      "optional": true
+    },
+    "bmi": {
+      "type": "float",
+      "optional": true
+    },
+    "pulse_bpm": {
+      "type": "int",
+      "optional": true
+    },
+    "blood_pressure_systolic": {
+      "type": "int",
+      "optional": true
+    },
+    "blood_pressure_diastolic": {
+      "type": "int",
+      "optional": true
+    },
+    "temperature_celsius": {
+      "type": "float",
+      "optional": true
+    },
+    "respiratory_rate": {
+      "type": "int",
+      "optional": true
+    },
+    "oxygen_saturation_percent": {
+      "type": "int",
+      "optional": true
+    },
+    "pain_scale": {
+      "type": "int",
+      "optional": true
+    },
+    "additional_vitals": {
+      "type": "str",
+      "optional": true
+    },
+    "measurement_context": {
+      "type": "str",
+      "optional": true
+    },
+    "measured_by": {
+      "provider_name": {
+        "type": "str",
+        "optional": false
+      },
+      "npi_number": {
+        "type": "str",
+        "optional": false
+      },
+      "specialty": {
+        "type": "str",
+        "optional": true
+      },
+      "active_status": {
+        "type": "bool",
+        "optional": false
+      }
+    }
+  },
+  "labresult": {
+    "patient_id": 12434,
+    "visit_id": {
+      "type": "int",
+      "optional": true
+    },
+    "lab_name": {
+      "type": "str",
+      "optional": false
+    },
+    "test_name": {
+      "type": "str",
+      "optional": false
+    },
+    "loinc_code": {
+      "type": "str",
+      "optional": true
+    },
+    "result_value": {
+      "type": "str",
+      "optional": false
+    },
+    "result_numeric": {
+      "type": "float",
+      "optional": true
+    },
+    "unit_of_measurement": {
+      "type": "str",
+      "optional": true
+    },
+    "reference_range_low": {
+      "type": "float",
+      "optional": true
+    },
+    "reference_range_high": {
+      "type": "float",
+      "optional": true
+    },
+    "reference_range_text": {
+      "type": "str",
+      "optional": true
+    },
+    "abnormality_flag": {
+      "type": "bool",
+      "optional": true
+    },
+    "abnormality_type": {
+      "type": "str",
+      "optional": true
+    },
+    "collection_datetime": {
+      "type": "str",
+      "optional": true
+    },
+    "result_datetime": {
+      "type": "str",
+      "optional": true
+    },
+    "ordering_provider": {
+      "provider_name": {
+        "type": "str",
+        "optional": false
+      },
+      "npi_number": {
+        "type": "str",
+        "optional": false
+      },
+      "specialty": {
+        "type": "str",
+        "optional": true
+      },
+      "active_status": {
+        "type": "bool",
+        "optional": false
+      }
+    },
+    "result_status": {
+      "type": "str",
+      "optional": true
+    },
+    "clinical_significance": {
+      "type": "str",
+      "optional": true
+    }
+  },
+  "imagingstudy": {
+    "patient_id": 12434,
+    "visit_id": {
+      "type": "int",
+      "optional": true
+    },
+    "imaging_type": {
+      "type": "str",
+      "optional": false
+    },
+    "modality": {
+      "type": "str",
+      "optional": true
+    },
+    "body_region": {
+      "type": "str",
+      "optional": true
+    },
+    "study_datetime": {
+      "type": "str",
+      "optional": false
+    },
+    "ordering_provider": {
+      "provider_name": {
+        "type": "str",
+        "optional": false
+      },
+      "npi_number": {
+        "type": "str",
+        "optional": false
+      },
+      "specialty": {
+        "type": "str",
+        "optional": true
+      },
+      "active_status": {
+        "type": "bool",
+        "optional": false
+      }
+    },
+    "radiologist": {
+      "provider_name": {
+        "type": "str",
+        "optional": false
+      },
+      "npi_number": {
+        "type": "str",
+        "optional": false
+      },
+      "specialty": {
+        "type": "str",
+        "optional": true
+      },
+      "active_status": {
+        "type": "bool",
+        "optional": false
+      }
+    },
+    "indication": {
+      "type": "str",
+      "optional": true
+    },
+    "technique": {
+      "type": "str",
+      "optional": true
+    },
+    "comparison": {
+      "type": "str",
+      "optional": true
+    },
+    "findings": {
+      "type": "str",
+      "optional": true
+    },
+    "impression": {
+      "type": "str",
+      "optional": true
+    },
+    "key_findings": {
+      "type": "str",
+      "optional": true
+    },
+    "report_status": {
+      "type": "str",
+      "optional": true
+    },
+    "critical_findings": {
+      "type": "bool",
+      "optional": true
+    }
+  },
+  "proceduretreatment": {
+    "patient_id": 12434,
+    "visit_id": {
+      "type": "int",
+      "optional": true
+    },
+    "procedure_name": {
+      "type": "str",
+      "optional": false
+    },
+    "procedure_type": {
+      "type": "str",
+      "optional": true
+    },
+    "cpt_code": {
+      "type": "str",
+      "optional": true
+    },
+    "procedure_date": {
+      "type": "str",
+      "optional": false
+    },
+    "duration_minutes": {
+      "type": "int",
+      "optional": true
+        "type": "str",
+        "optional": true
+      },
+      "active_status": {
+        "type": "bool",
+        "optional": false
+      }
+    },
+    "therapy_type": {
+      "type": "str",
+      "optional": true
+    },
+    "sessions_completed": {
+      "type": "int",
+      "optional": true
+    },
+    "sessions_planned": {
+      "type": "int",
+      "optional": true
+    }
+  }
+}

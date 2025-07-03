@@ -1,0 +1,91 @@
+{
+  "patient": {
+    "patient_id": 12434,
+    "medical_record_number": "123456789",
+    "created_date": null,
+    "updated_date": null
+  },
+  "visit": {
+    "visit_id": null,
+    "patient_id": 12434,
+    "visit_date": "2025-06-30",
+    "visit_type": null,
+    "department": {
+      "department_name": "Downtown Medical Center",
+      "department_type": null,
+      "system_name": null,
+      "created_date": null
+    },
+    "primary_provider": {
+      "provider_name": "Dr. Emily Smith, MD",
+      "npi_number": null,
+      "specialty": null,
+      "active_status": null,
+      "created_date": null
+    },
+    "discharge_date": null,
+    "created_date": null
+  },
+  "visitnotes": {
+    "visit_id": null,
+    "patient_id": 12434,
+    "note_date": "2025-06-30",
+    "note_type": null,
+    "full_note_text": "Patient reports persistent headaches and occasional dizziness for the past two weeks.\nJohn Doe is a 39-year-old male presenting with a two-week history of intermittent, throbbing headaches localized mostly to the frontal region. The headaches last 1-2 hours and are sometimes accompanied by nausea but no vomiting. Patient denies any recent trauma, visual changes, or loss of consciousness.",
+    "chief_complaint": "Patient reports persistent headaches and occasional dizziness for the past two weeks.",
+    "history_present_illness": "John Doe is a 39-year-old male presenting with a two-week history of intermittent, throbbing headaches localized mostly to the frontal region. The headaches last 1-2 hours and are sometimes accompanied by nausea but no vomiting. Patient denies any recent trauma, visual changes, or loss of consciousness.",
+    "review_of_systems": null,
+    "physical_exam": null,
+    "assessment": null,
+    "plan": null,
+    "author_provider": {
+      "provider_name": "Dr. Emily Smith, MD",
+      "npi_number": null,
+      "specialty": null,
+      "active_status": null,
+      "created_date": null
+    },
+    "extraction_confidence": null,
+    "extraction_method": null,
+    "extraction_timestamp": null,
+    "created_date": null
+  },
+  "diagnosis": [],
+  "symptom": [
+    {
+      "patient_id": 12434,
+      "visit_id": null,
+      "symptom_name": "headaches",
+      "onset_date": "2025-06-16",
+      "duration": "1-2 hours (per episode), 2 weeks (overall history)",
+      "frequency": "persistent, intermittent",
+      "severity": null,
+      "symptom_description": "throbbing headaches localized mostly to the frontal region. The headaches last 1-2 hours and are sometimes accompanied by nausea but no vomiting. Patient denies any recent trauma, visual changes, or loss of consciousness related to headaches.",
+      "alleviating_factors": null,
+      "aggravating_factors": null,
+      "reported_date": "2025-06-30",
+      "resolution_date": null,
+      "created_date": null
+    },
+    {
+      "patient_id": 12434,
+      "visit_id": null,
+      "symptom_name": "dizziness",
+      "onset_date": "2025-06-16",
+      "duration": "2 weeks",
+      "frequency": "occasional",
+      "severity": null,
+      "symptom_description": "occasional dizziness",
+      "alleviating_factors": null,
+      "aggravating_factors": null,
+      "reported_date": "2025-06-30",
+      "resolution_date": null,
+      "created_date": null
+    }
+  ],
+  "medication": [],
+  "vitalsigns": [],
+  "labresult": [],
+  "imagingstudy": [],
+  "proceduretreatment": []
+}

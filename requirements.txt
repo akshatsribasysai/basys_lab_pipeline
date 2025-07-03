@@ -1,0 +1,5 @@
+pydantic
+langchain
+mysql
+langchain_google_genai
+agentic-doc
