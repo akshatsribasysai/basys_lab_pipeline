@@ -73,9 +73,7 @@ class SQLSaver:
         
         # If no existing visit found, create new one
         # Use the visit_id from the data if available, otherwise generate one
-        visit_id = visit_data.get('visit_id')
-        if not visit_id:
-            visit_id = self.generate_unique_visit_id(cursor)
+        visit_id = self.generate_unique_visit_id(cursor)
         
         visit_query = """
         INSERT INTO visits (visit_id, patient_id, visit_date, visit_type, department_name, primary_provider_name, discharge_date, created_date) 
@@ -188,7 +186,11 @@ class SQLSaver:
         """Parse date string into proper format for MySQL"""
         if isinstance(date_value, str):
             try:
-                if '/' in date_value:
+                # Handle year-only format (e.g., '2003')
+                if len(date_value) == 4 and date_value.isdigit():
+                    return datetime.strptime(f"{date_value}-01-01", '%Y-%m-%d').date()
+                # Handle existing formats
+                elif '/' in date_value:
                     return datetime.strptime(date_value, '%m/%d/%Y').date()
                 elif '-' in date_value:
                     return datetime.strptime(date_value, '%Y-%m-%d').date()
@@ -249,9 +251,15 @@ class SQLSaver:
             # Handle visits - find existing or create new
             visit_ids = []
             if data.get('visit'):
-                # Handle single visit
-                visit_id = self.find_or_create_visit(cursor, patient_id, data['visit'])
-                visit_ids.append(visit_id)
+                # Handle visit data (could be single dict or list)
+                visit_data = data['visit']
+                if isinstance(visit_data, list):
+                    for visit in visit_data:
+                        visit_id = self.find_or_create_visit(cursor, patient_id, visit)
+                        visit_ids.append(visit_id)
+                else:
+                    visit_id = self.find_or_create_visit(cursor, patient_id, visit_data)
+                    visit_ids.append(visit_id)
             
             # If no visit data provided, we need to create a default visit for orphaned records
             if not visit_ids and (data.get('diagnosis') or data.get('medication') or data.get('symptom') or data.get('vital_signs')):
@@ -270,8 +278,11 @@ class SQLSaver:
             
             # Insert Visit Notes
             if data.get('visitnotes'):
-                for note_data in data['visitnotes']:
-                    note_query = """
+                note_data = data['visitnotes']
+                    # Skip if note_data is a string instead of dict
+                if isinstance(note_data, str):
+                    print(f"⚠ Skipping string note data: {note_data[:100]}...")
+                note_query = """
                     INSERT INTO visit_notes (patient_id, visit_id, note_date, note_type, full_note_text, 
                     chief_complaint, history_present_illness, review_of_systems, physical_exam, 
                     assessment, plan, created_date) 
@@ -279,17 +290,17 @@ class SQLSaver:
                     """
                     
                     # Parse note_date
-                    note_date = self.parse_date(note_data.get('note_date'))
-                    if isinstance(note_date, str):
-                        try:
-                            if '/' in note_date:
+                note_date = self.parse_date(note_data.get('note_date'))
+                if isinstance(note_date, str):
+                    try:
+                        if '/' in note_date:
                                 note_date = datetime.strptime(note_date, '%m/%d/%Y').date()
-                            elif '-' in note_date:
+                        elif '-' in note_date:
                                 note_date = datetime.strptime(note_date, '%Y-%m-%d').date()
-                        except:
+                    except:
                             note_date = datetime.now().date()
                     
-                    cursor.execute(note_query, (
+                cursor.execute(note_query, (
                         note_data.get('patient_id', patient_id),
                         primary_visit_id,
                         note_date,
@@ -303,7 +314,7 @@ class SQLSaver:
                         note_data.get('plan'),
                         datetime.now()
                     ))
-                    print(f"✓ Inserted visit note: {note_data.get('note_type', 'Unknown type')}")
+                print(f"✓ Inserted visit note: {note_data.get('note_type', 'Unknown type')}")
             
             # Insert Diagnoses
             if data.get('diagnosis'):
@@ -315,7 +326,7 @@ class SQLSaver:
                     """
                     cursor.execute(diag_query, (
                         diag_data.get('patient_id', patient_id),
-                        diag_data.get('visit_id', primary_visit_id),
+                        primary_visit_id,
                         diag_data['diagnosis_name'],
                         diag_data.get('icd10_code'),
                         self.parse_date(diag_data.get('onset_date')),
@@ -340,7 +351,7 @@ class SQLSaver:
                     """
                     cursor.execute(med_query, (
                         med_data.get('patient_id', patient_id),
-                        med_data.get('visit_id', primary_visit_id),
+                        primary_visit_id,
                         med_data['medication_name'],
                         med_data.get('generic_name'),
                         med_data.get('dose'),
@@ -367,7 +378,7 @@ class SQLSaver:
                     """
                     cursor.execute(symptom_query, (
                         symptom_data.get('patient_id', patient_id),
-                        symptom_data.get('visit_id', primary_visit_id),
+                        primary_visit_id,
                         symptom_data['symptom_name'],
                         self.parse_date(symptom_data.get('onset_date')),
                         symptom_data.get('duration'),
@@ -405,7 +416,7 @@ class SQLSaver:
                     
                     cursor.execute(vs_query, (
                         vs_data.get('patient_id', patient_id), 
-                        vs_data.get('visit_id', primary_visit_id), 
+                        primary_visit_id, 
                         measurement_dt,
                         vs_data.get('weight_kg'), 
                         vs_data.get('height_cm'), 
@@ -431,7 +442,7 @@ class SQLSaver:
                     """
                     cursor.execute(lab_query, (
                         lab_data.get('patient_id', patient_id),
-                        lab_data.get('visit_id', primary_visit_id),
+                        primary_visit_id,
                         lab_data.get('test_name'),
                         lab_data.get('test_value'),
                         lab_data.get('reference_range'),
@@ -452,7 +463,7 @@ class SQLSaver:
                     """
                     cursor.execute(img_query, (
                         img_data.get('patient_id', patient_id),
-                        img_data.get('visit_id', primary_visit_id),
+                        primary_visit_id,
                         img_data.get('study_type'),
                         self.parse_date(img_data.get('study_date')),
                         img_data.get('findings'),
@@ -471,7 +482,7 @@ class SQLSaver:
                     """
                     cursor.execute(proc_query, (
                         proc_data.get('patient_id', patient_id),
-                        proc_data.get('visit_id', primary_visit_id),
+                        primary_visit_id,
                         proc_data.get('procedure_name'),
                         self.parse_date(proc_data.get('procedure_date')),
                         proc_data.get('provider_name'),

@@ -1,9 +1,10 @@
 import os
 import json
+
 #########################################
 # Define API Keys
-landing_ai_api_key = "OTk3bDB5b3V0czh1N2N5M2FuZWtwOmx6UXdJTkJFSlgxWVU3SFJXNVN1TmZ0eXNKY2ozaERF"
-google_api_key = "AIzaSyCwIyE-xCxFunqmq65GmhS6VgKmY1Cpkfs"
+landing_ai_api_key = os.environ.get("VISION_AGENT_API_KEY", "none")
+google_api_key = os.environ.get("GOOGLE_API_KEY", "none")
 
 os.environ["VISION_AGENT_API_KEY"]=landing_ai_api_key
 
@@ -26,7 +27,7 @@ print(json.dumps(json_prompt, indent=2))
 #########################################
 # Scrape text
 from scrape_doc import PDFScraper
-pdf_filepath = r"C:\codes\agentic_ai_basys\training_files_patient\1.pdf"
+pdf_filepath = r"C:\codes\agentic_ai_basys\training_files_patient\3.pdf"
 Scraper = PDFScraper()
 scraped_text = Scraper.extract_text_from_pdf_landingai(pdf_filepath)
 
