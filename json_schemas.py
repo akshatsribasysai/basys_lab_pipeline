@@ -22,16 +22,6 @@ class Department(BaseModel):
     system_name:            Optional[str]           = Field(None)
     created_date:           datetime                = Field(default_factory=datetime.now)
 
-class Visit(BaseModel):
-    visit_id:               int                     = Field(..., description="Primary key")
-    patient_id:             Optional[int]           = Field(None)
-    visit_date:             Optional[str]           = Field(None)
-    visit_type:             Optional[str]           = Field(None)
-    visit_notes:            Optional[VisitNotes]    = Field(None)
-    department:             Optional[Department]    = None
-    primary_provider:       Optional[Provider]      = None
-    discharge_date:         Optional[datetime]      = Field(None)
-    created_date:           datetime                = Field(default_factory=datetime.now)
 
 class VisitNotes(BaseModel):
     patient_id:             Optional[int]           = Field(None)
@@ -49,6 +39,19 @@ class VisitNotes(BaseModel):
     extraction_method:      Optional[str]           = Field(None)
     extraction_timestamp:   Optional[str]           = Field(None)
     created_date:           datetime                = Field(default_factory=datetime.now)
+
+    
+class Visit(BaseModel):
+    visit_id:               int                     = Field(..., description="Primary key")
+    patient_id:             Optional[int]           = Field(None)
+    visit_date:             Optional[str]           = Field(None)
+    visit_type:             Optional[str]           = Field(None)
+    visit_notes:            Optional[VisitNotes]    = Field(None)
+    department:             Optional[Department]    = None
+    primary_provider:       Optional[Provider]      = None
+    discharge_date:         Optional[datetime]      = Field(None)
+    created_date:           datetime                = Field(default_factory=datetime.now)
+
 
 class Diagnosis(BaseModel):
     patient_id:             Optional[int]           = Field(None)

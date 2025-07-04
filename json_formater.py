@@ -126,18 +126,22 @@ if __name__ == "__main__":
         ]
     }
 
+
+#new object creation
+    obj1= JSONReviewer()
+
     # Step 1: Extract and replace with placeholders
-    transformed_json, refs = extract_linked_objects(full_data)
+    transformed_json, refs = obj1.extract_linked_objects(full_data)
 
     # Step 2: Resolve or generate IDs
-    id_mapping = resolve_or_generate_ids(
+    id_mapping = obj1.resolve_or_generate_ids(
         refs,
         existing_providers={"1234567890": 9001},
         existing_departments={"Cardiology": 8001}
     )
 
     # Step 3: Finalize JSON with IDs
-    final_json = replace_placeholders_with_ids(transformed_json, id_mapping)
+    final_json = obj1.replace_placeholders_with_ids(transformed_json, id_mapping)
 
     # Output result
     print(json.dumps(final_json, indent=2))

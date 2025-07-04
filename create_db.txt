@@ -1,11 +1,10 @@
-
 -- Create database
 CREATE DATABASE medical_records;
 USE medical_records;
 
--- Create patients table (matches Python code)
+-- Create patients table (compatible with Python code)
 CREATE TABLE patients (
-    patient_id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT PRIMARY KEY,  -- CHANGED: Removed AUTO_INCREMENT to allow manual assignment
     medical_record_number VARCHAR(50) UNIQUE NOT NULL,
     created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_date DATETIME NULL
@@ -16,41 +15,47 @@ CREATE TABLE departments (
     department_id INT AUTO_INCREMENT PRIMARY KEY,
     department_name VARCHAR(100) NOT NULL,
     department_type VARCHAR(50),
-    system_name VARCHAR(100)
+    system_name VARCHAR(100),
+    created_date DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create providers table
 CREATE TABLE providers (
     provider_id INT AUTO_INCREMENT PRIMARY KEY,
     provider_name VARCHAR(100) NOT NULL,
-    npi_number VARCHAR(20) UNIQUE NOT NULL,
+    npi_number VARCHAR(20) UNIQUE,  -- CHANGED: Made nullable for unknown providers
     specialty VARCHAR(100),
     department_id INT,
     active_status BOOLEAN DEFAULT TRUE,
+    created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (department_id) REFERENCES departments(department_id)
 );
 
--- MODIFIED: Create visits table (added department_name and primary_provider_name columns)
+-- MODIFIED: Create visits table with manual visit_id assignment
 CREATE TABLE visits (
-    visit_id INT AUTO_INCREMENT PRIMARY KEY,
+    visit_id INT PRIMARY KEY,  -- CHANGED: Removed AUTO_INCREMENT for manual assignment
     patient_id INT NOT NULL,
-    visit_date DATETIME NOT NULL,
+    visit_date DATE NOT NULL,  -- CHANGED: DATE instead of DATETIME for better date matching
     visit_type VARCHAR(50) NOT NULL,
-    department_name VARCHAR(100),  -- ADDED: to match Python code
-    primary_provider_name VARCHAR(100),  -- ADDED: to match Python code
-    department_id INT,
-    primary_provider_id INT,
-    discharge_date DATETIME,
+    department_name VARCHAR(100),  -- Direct string storage for deduplication
+    primary_provider_name VARCHAR(100),  -- Direct string storage for deduplication
+    department_id INT,  -- Optional reference to departments table
+    primary_provider_id INT,  -- Optional reference to providers table
+    discharge_date DATE,  -- CHANGED: DATE instead of DATETIME
+    created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
     FOREIGN KEY (department_id) REFERENCES departments(department_id),
-    FOREIGN KEY (primary_provider_id) REFERENCES providers(provider_id)
+    FOREIGN KEY (primary_provider_id) REFERENCES providers(provider_id),
+    -- ADDED: Unique constraint for deduplication
+    UNIQUE KEY unique_visit (patient_id, visit_date, visit_type, department_name, primary_provider_name)
 );
 
--- Create visit_notes table (no changes needed)
+-- Create visit_notes table (updated to match schema)
 CREATE TABLE visit_notes (
     note_id INT AUTO_INCREMENT PRIMARY KEY,
     visit_id INT NOT NULL,
-    note_date DATETIME,
+    patient_id INT NOT NULL,  -- ADDED: Direct patient reference
+    note_date DATE,
     note_type VARCHAR(50),
     full_note_text TEXT,
     chief_complaint TEXT,
@@ -63,19 +68,21 @@ CREATE TABLE visit_notes (
     extraction_confidence DECIMAL(3,2),
     extraction_method VARCHAR(50),
     extraction_timestamp DATETIME,
+    created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (visit_id) REFERENCES visits(visit_id),
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
     FOREIGN KEY (author_provider_id) REFERENCES providers(provider_id)
 );
 
--- Create diagnoses table (no changes needed)
+-- Create diagnoses table (added created_date)
 CREATE TABLE diagnoses (
     diagnosis_id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
     visit_id INT,
     diagnosis_name VARCHAR(200) NOT NULL,
     icd10_code VARCHAR(10),
-    onset_date DATETIME,
-    resolution_date DATETIME,
+    onset_date DATE,  -- CHANGED: DATE instead of DATETIME
+    resolution_date DATE,  -- CHANGED: DATE instead of DATETIME
     is_chronic BOOLEAN DEFAULT FALSE,
     is_active BOOLEAN DEFAULT TRUE,
     severity VARCHAR(20),
@@ -84,31 +91,33 @@ CREATE TABLE diagnoses (
     diagnosis_context TEXT,
     confidence_score DECIMAL(3,2),
     updated_date DATETIME,
+    created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
     FOREIGN KEY (visit_id) REFERENCES visits(visit_id),
     FOREIGN KEY (diagnosing_provider_id) REFERENCES providers(provider_id)
 );
 
--- Create symptoms table (no changes needed)
+-- Create symptoms table (added created_date)
 CREATE TABLE symptoms (
     symptom_id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
     visit_id INT,
     symptom_name VARCHAR(100) NOT NULL,
-    onset_date DATETIME,
+    onset_date DATE,  -- CHANGED: DATE instead of DATETIME
     duration VARCHAR(50),
     frequency VARCHAR(50),
     severity VARCHAR(20),
     symptom_description TEXT,
     alleviating_factors TEXT,
     aggravating_factors TEXT,
-    reported_date DATETIME,
-    resolution_date DATETIME,
+    reported_date DATE,
+    resolution_date DATE,
+    created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
     FOREIGN KEY (visit_id) REFERENCES visits(visit_id)
 );
 
--- Create medications table (no changes needed)
+-- Create medications table (added created_date)
 CREATE TABLE medications (
     medication_id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
@@ -129,12 +138,13 @@ CREATE TABLE medications (
     sig_text TEXT,
     patient_instructions TEXT,
     updated_date DATETIME,
+    created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
     FOREIGN KEY (visit_id) REFERENCES visits(visit_id),
     FOREIGN KEY (prescribing_provider_id) REFERENCES providers(provider_id)
 );
 
--- Create vital_signs table (no changes needed)
+-- Create vital_signs table (added created_date)
 CREATE TABLE vital_signs (
     vital_sign_id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
@@ -148,11 +158,12 @@ CREATE TABLE vital_signs (
     blood_pressure_diastolic INT,
     temperature_celsius DECIMAL(4,2),
     respiratory_rate INT,
-    oxygen_saturation_percent INT,
+    oxygen_saturation_percent DECIMAL(5,2),  -- CHANGED: Allow decimal values
     pain_scale INT CHECK (pain_scale >= 0 AND pain_scale <= 10),
     additional_vitals TEXT,
     measurement_context VARCHAR(100),
     measured_by_id INT,
+    created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
     FOREIGN KEY (visit_id) REFERENCES visits(visit_id),
     FOREIGN KEY (measured_by_id) REFERENCES providers(provider_id)
@@ -179,6 +190,7 @@ CREATE TABLE lab_results (
     ordering_provider_id INT,
     result_status VARCHAR(20),
     clinical_significance TEXT,
+    created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
     FOREIGN KEY (visit_id) REFERENCES visits(visit_id),
     FOREIGN KEY (ordering_provider_id) REFERENCES providers(provider_id)
@@ -203,6 +215,7 @@ CREATE TABLE imaging_studies (
     key_findings TEXT,
     report_status VARCHAR(20),
     critical_findings BOOLEAN DEFAULT FALSE,
+    created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
     FOREIGN KEY (visit_id) REFERENCES visits(visit_id),
     FOREIGN KEY (ordering_provider_id) REFERENCES providers(provider_id),
@@ -226,7 +239,32 @@ CREATE TABLE procedures (
     therapy_type VARCHAR(100),
     sessions_completed INT,
     sessions_planned INT,
+    created_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
     FOREIGN KEY (visit_id) REFERENCES visits(visit_id),
     FOREIGN KEY (primary_provider_id) REFERENCES providers(provider_id)
 );
+
+-- Create indexes for better performance
+CREATE INDEX idx_patient_visits ON visits(patient_id, visit_date);
+CREATE INDEX idx_visit_diagnoses ON diagnoses(visit_id);
+CREATE INDEX idx_visit_medications ON medications(visit_id);
+CREATE INDEX idx_visit_symptoms ON symptoms(visit_id);
+CREATE INDEX idx_visit_vitals ON vital_signs(visit_id);
+CREATE INDEX idx_patient_diagnoses ON diagnoses(patient_id);
+CREATE INDEX idx_patient_medications ON medications(patient_id);
+
+-- Optional: Create a view for easy visit lookups
+CREATE VIEW visit_summary AS
+SELECT 
+    v.visit_id,
+    v.patient_id,
+    p.medical_record_number,
+    v.visit_date,
+    v.visit_type,
+    v.department_name,
+    v.primary_provider_name,
+    v.created_date
+FROM visits v
+JOIN patients p ON v.patient_id = p.patient_id
+ORDER BY v.visit_date DESC;
